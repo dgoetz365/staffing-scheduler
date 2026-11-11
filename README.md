@@ -1,56 +1,42 @@
-# Fieldwork Scheduler
+# Staffing Scheduler
 
-A runnable scheduling portfolio project for a fictional community science exhibition. Assign volunteers to stations, enforce availability and role constraints, publish immutable schedule issues, and review reassignments against the current draft.
+Assign volunteers, publish a fixed schedule, and review change requests for a fictional science exhibition.
 
-**Python 3.12+ · SQLite · vanilla JavaScript · zero third-party dependencies**
+**Python 3.12+ · SQLite · JavaScript · No runtime dependencies**
 
-All names, stations and scenarios are invented. This is an original local demonstration, not employer software or a production workforce system.
+[Full guide](docs/guide.md) · [Portfolio](https://github.com/dgoetz365) · [MIT license](LICENSE)
 
-## Run locally
-
-From this repository's root, with Python 3.12 or newer:
+## Quick start
 
 ```sh
+git clone https://github.com/dgoetz365/staffing-scheduler.git
+cd staffing-scheduler
 python app.py seed
 python app.py serve
 ```
 
-Open [http://127.0.0.1:8766](http://127.0.0.1:8766). On Windows, `py -3.12` may replace `python`. Stop with Ctrl+C; restart with the serve command to retain your changes. No install, build step or network service is required.
+Open http://127.0.0.1:8766. The app is branded **Fieldwork** and starts with four of five places filled. Stop with Ctrl+C; restart with `serve` to keep working. `seed` refuses to overwrite an existing database.
 
-`seed` refuses to touch any existing database. To start a separate scenario, use `python app.py seed --db data/second.sqlite3` and serve that same path with `python app.py serve --db data/second.sqlite3`. The default database is `data/schedule.sqlite3`, relative to the application, not your terminal directory. Change the port with `--port 8767` if needed.
+On Windows, `py -3.12` can replace `python`. If you already cloned the repo, start with the Python commands from its root.
 
-## Five-minute demonstration
+## Try it
 
-1. **See a constraint reject a change.** Four of five places are filled. Under Build bench, select Sam Reed and assign. Sam is not a Maker; the assignment is rejected and nothing changes. Ellis Rowan is eligible but overlaps with the Water lab shift.
-2. **Complete and publish.** Assign Bea Flores to Build bench. Publish the schedule, then open Published to inspect issue 1.
-3. **Review a reassignment.** Open Change requests. Select Mira Chen's 09:00 Welcome desk assignment, choose Sam Reed, enter a reason and submit. Submission preserves the current assignment. Approve the change to replace Mira in the draft.
-4. **Inspect the boundary.** The draft now lists Sam. Published issue 1 still lists Mira. Publish again and use the issue selector to compare both fixed schedules. History records each successful action.
+Assign **Bea Flores** to **Build bench** and publish. Submit and approve a reassignment from **Mira Chen** to **Sam Reed**. The draft changes while published issue 1 stays fixed. Publish again to compare both schedules.
 
-To demonstrate review-time conflicts before approving step 3, remove Theo from the 09:00 Light lab and assign Sam there. Approval now fails because Sam overlaps. The request stays pending; decline it or resolve the conflict and try again.
+## Engineering highlights
 
-To demonstrate concurrent edits, open two tabs. Change the draft in one, then attempt a change from the other. The older workspace version receives a conflict response and refreshes instead of overwriting newer work.
+- **Assignment rules:** eligibility, full-shift availability, capacity, and overlapping commitments are checked together.
+- **Review at the right time:** approvals revalidate the current assignment and schedule.
+- **Publication history:** immutable snapshots preserve each issued schedule; version checks reject stale edits.
 
-## What the code demonstrates
+[Application and storage](app.py) · [Tests](tests/) · [Engineering decisions](docs/decisions.md) · [Verification](docs/verification.md)
 
-- Role eligibility, a full-shift availability window, capacity and half-open time interval overlap checks.
-- A `BEGIN IMMEDIATE` transaction around each mutation, including its event and version increment. A rejected change writes nothing.
-- Optimistic concurrency across assignments, requests, reviews and publication.
-- Immutable, denormalized schedule snapshots. SQLite triggers also reject snapshot updates and deletes.
-- Request-time and approval-time validation. A request cannot become an approval of a different original assignment.
-- Exact HTTP route allowlists, 16 KiB JSON limits, duplicate-header/key rejection, Unicode checks, local Host/Origin validation and text-only DOM rendering.
-
-See [engineering decisions](docs/decisions.md) for boundaries and tradeoffs, and [verification](docs/verification.md) for evidence and limitations.
-
-## Tests
+## Tests and scope
 
 ```sh
 python -m unittest discover -s tests -v
 ```
 
-Tests create temporary databases and bind a temporary loopback port. They cover persisted edits, safe reseeding, simultaneous stale writers, overlap boundaries, invalid assignments, immutable publication, review rollback and real HTTP requests. Optional JavaScript syntax check: `node --check static/app.js`.
+A local, single-user demonstration with synthetic volunteers and seeded availability. It does not provide authentication, payroll, calendar integration, or schedule optimization. Browser rendering has not been verified.
 
-## Scope
-
-The roster, eligibility, availability and shifts are seeded scenario inputs. The UI edits assignments and reviews changes; it does not provide roster administration, optimization, authentication, notifications, time zones or payroll. One invented event day uses minutes since midnight. The server binds only to `127.0.0.1`; do not expose or deploy this development server. The local operator controls the database file and therefore is not an adversarial security boundary.
-
-MIT License · Copyright 2026 Daniel Goetz.
+Built by [Daniel Goetz](https://github.com/dgoetz365) as an independent portfolio example. Employer code and data are not included.
